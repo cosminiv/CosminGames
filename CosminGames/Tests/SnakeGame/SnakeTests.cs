@@ -97,6 +97,15 @@ namespace Tests.SnakeGame
         }
 
         [Test]
+        public void GetNextState_FromFinalState_ShouldFail()
+        {
+            GameState state = new(new Snake(Direction.Right, new Point(0, 0)));
+            state.IsFinal = true;
+            
+            Assert.Throws<InvalidOperationException>(() => _engine.GetNextState(state));
+        }
+
+        [Test]
         public void ThreePieceSnake_MovesCorrectly_Down()
         {
             // arrange
@@ -140,5 +149,129 @@ namespace Tests.SnakeGame
             Point[] expectedNewPosition = new Point[] { new(9, 10), new(10, 10), new(11, 10) };
             CollectionAssert.AreEqual(expectedNewPosition, nextGameState.Snake.PiecePositions);
         }
+
+        [Test]
+        public void Snake_DetectsSelfCollision_Left()
+        {
+            // arrange
+            Point[] pieces = GetConsecutivePoints((10, 10), Direction.Down, Direction.Left, Direction.Up, Direction.Up);
+            GameState initialGameState = new(new Snake(Direction.Left, pieces));
+
+            // act
+            GameState nextGameState = _engine.GetNextState(initialGameState);
+
+            // assert
+            Assert.That(nextGameState.IsFinal, Is.True);
+        }
+
+        [Test]
+        public void Snake_DetectsSelfCollision_Right()
+        {
+            // arrange
+            Point[] pieces = GetConsecutivePoints((10, 10), Direction.Left, Direction.Down, 
+                Direction.Right, Direction.Right,
+                Direction.Up, Direction.Up);
+            GameState initialGameState = new(new Snake(Direction.Right, pieces));
+
+            // act
+            GameState nextGameState = _engine.GetNextState(initialGameState);
+
+            // assert
+            Assert.That(nextGameState.IsFinal, Is.True);
+        }
+
+        [Test]
+        public void Snake_DetectsSelfCollision_Up()
+        {
+            // arrange
+            Point[] pieces = GetConsecutivePoints((10, 10), Direction.Right,
+                Direction.Up, Direction.Left, Direction.Left);
+            GameState initialGameState = new(new Snake(Direction.Up, pieces));
+
+            // act
+            GameState nextGameState = _engine.GetNextState(initialGameState);
+
+            // assert
+            Assert.That(nextGameState.IsFinal, Is.True);
+        }
+
+        [Test]
+        public void Snake_DetectsSelfCollision_Down()
+        {
+            // arrange
+            Point[] pieces = GetConsecutivePoints((10, 10), Direction.Right,
+                Direction.Down, Direction.Left, Direction.Left);
+            GameState initialGameState = new(new Snake(Direction.Down, pieces));
+
+            // act
+            GameState nextGameState = _engine.GetNextState(initialGameState);
+
+            // assert
+            Assert.That(nextGameState.IsFinal, Is.True);
+        }
+
+        [Test]
+        public void Snake_Can_Chase_ItsTail()
+        {
+            // arrange
+            Point[] pieces = GetConsecutivePoints((10, 10), Direction.Right,
+                Direction.Down, Direction.Left);
+            GameState initialGameState = new(new Snake(Direction.Down, pieces));
+
+            // act
+            GameState nextGameState = _engine.GetNextState(initialGameState);
+
+            // assert
+            Assert.That(nextGameState.IsFinal, Is.False);
+        }
+
+        #region Helpers
+
+        public static Point[] GetPointArray(params (int, int)[] tuples)
+        {
+            return tuples.Select(tuple => new Point(tuple.Item1, tuple.Item2)).ToArray();
+        }
+
+        public static Point[] GetConsecutivePoints((int x, int y) initial, params Direction[] directions)
+        {
+            Point[] result = new Point[1 + directions.Length];
+
+            result[0] = new(initial.x, initial.y);
+
+            for (int dirIndex = 0; dirIndex < directions.Length; dirIndex++)
+            {
+                Direction direction = directions[dirIndex];
+                if (dirIndex > 0)
+                    ValidateDirection(direction, directions[dirIndex - 1]);
+
+                Point prevPoint = result[dirIndex];
+                int x = prevPoint.X;
+                int y = prevPoint.Y;
+
+                if (direction == Direction.Up) y--;
+                else if (direction == Direction.Down) y++;
+                else if (direction == Direction.Left) x--;
+                else if (direction == Direction.Right) x++;
+
+                int pointIndex = dirIndex + 1;
+                result[pointIndex] = new(x, y);
+            }
+
+            return result;
+        }
+
+        private static void ValidateDirection(Direction direction, Direction prevDirection)
+        {
+            bool isInvalid =
+                prevDirection == Direction.Up && direction == Direction.Down ||
+                prevDirection == Direction.Down && direction == Direction.Up ||
+                prevDirection == Direction.Left && direction == Direction.Right ||
+                prevDirection == Direction.Right && direction == Direction.Left;
+
+            if (isInvalid)
+                throw new InvalidOperationException($"Incorrect: prevDirection = {prevDirection}, direction = {direction}");
+        }
+
+        #endregion
     }
 }

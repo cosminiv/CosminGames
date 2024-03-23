@@ -15,9 +15,14 @@
 
         public override bool Equals(object? obj)
         {
-            Point other = obj as Point;
-            if (other == null) return false;
+            if (obj is not Point other) return false;
+
             return X == other.X && Y == other.Y;
+        }
+
+        public override int GetHashCode()
+        {
+            return X.GetHashCode() ^ Y.GetHashCode();
         }
     }
 }

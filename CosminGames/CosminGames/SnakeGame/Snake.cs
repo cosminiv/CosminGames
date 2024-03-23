@@ -27,24 +27,29 @@
 
         public IEnumerable<Point> PiecePositions => _pieces.Select(piece => piece.Position);
 
-        internal void Move()
+        internal void Move(out bool isSelfCollision)
         {
-            SnakePiece head = MoveHead();
+            int headX = HeadPosition.X;
+            int headY = HeadPosition.Y;
 
             _pieces.RemoveAt(_pieces.Count - 1);    // remove tail
+            SnakePiece head = MoveHead(headX, headY, out isSelfCollision);
             _pieces.Insert(0, head);                // add head
         }
 
-        private SnakePiece MoveHead()
+        private SnakePiece MoveHead(int x, int y, out bool isSelfCollision)
         {
             Point newHeadPosition = MovementDirection switch
             {
-                Direction.Left => new(Head.Position.X - 1, Head.Position.Y),
-                Direction.Right => new(Head.Position.X + 1, Head.Position.Y),
-                Direction.Up => new(Head.Position.X, Head.Position.Y - 1),
-                Direction.Down => new(Head.Position.X, Head.Position.Y + 1),
+                Direction.Left => new(x - 1, y),
+                Direction.Right => new(x + 1, y),
+                Direction.Up => new(x, y - 1),
+                Direction.Down => new(x, y + 1),
                 _ => throw new ArgumentOutOfRangeException(nameof(MovementDirection)),
             };
+
+            isSelfCollision = _pieces.Any(piece => piece.Position.Equals(newHeadPosition));
+
             return new SnakePiece(newHeadPosition);
         }
     }

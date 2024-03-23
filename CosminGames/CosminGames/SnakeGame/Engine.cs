@@ -11,10 +11,13 @@
 
         internal GameState GetNextState(GameState initialGameState)
         {
-            initialGameState.Snake.Move();
+            if (initialGameState.IsFinal) 
+                throw new InvalidOperationException("Can't move from final state");
+
+            initialGameState.Snake.Move(out bool isSelfCollision);
             GameState nextGameState = new(initialGameState.Snake);
 
-            if (IsSnakeOutOfField(nextGameState.Snake))
+            if (IsSnakeOutOfField(nextGameState.Snake) || isSelfCollision)
                 nextGameState.IsFinal = true;
 
             return nextGameState;
