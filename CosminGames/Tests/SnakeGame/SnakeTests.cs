@@ -225,6 +225,70 @@ namespace Tests.SnakeGame
             Assert.That(nextGameState.IsFinal, Is.False);
         }
 
+        [TestCase(Direction.Right)]
+        [TestCase(Direction.Left)]
+        [TestCase(Direction.Up)]
+        [TestCase(Direction.Down)]
+        public void Snake_Should_Keep_Direction(Direction direction)
+        {
+            // arrange
+            Snake snake = new(direction, new Point(10, 10));
+
+            // act
+            snake.Direction = direction;
+
+            // assert
+            Assert.That(snake.Direction, Is.EqualTo(direction));
+        }
+
+        [TestCase(Direction.Right, Direction.Up)]
+        [TestCase(Direction.Left, Direction.Down)]
+        [TestCase(Direction.Up, Direction.Left)]
+        [TestCase(Direction.Down, Direction.Right)]
+        public void Snake_Should_Change_Direction_90_Degrees(Direction initialDirection, Direction intendedDirection)
+        {
+            // arrange
+            Snake snake = new(initialDirection, new Point(10, 10));
+
+            // act
+            snake.Direction = intendedDirection;
+
+            // assert
+            Assert.That(snake.Direction, Is.EqualTo(intendedDirection));
+        }
+
+        [TestCase(Direction.Right, Direction.Left)]
+        [TestCase(Direction.Left, Direction.Right)]
+        [TestCase(Direction.Up, Direction.Down)]
+        [TestCase(Direction.Down, Direction.Up)]
+        public void Snake_Should_Not_Go_Back(Direction initialDirection, Direction intendedDirection)
+        {
+            // arrange
+            Snake snake = new(initialDirection, new Point(10, 10));
+
+            // act
+            snake.Direction = intendedDirection;
+
+            // assert
+            Assert.That(snake.Direction, Is.EqualTo(initialDirection));
+        }
+
+        [Test]
+        public void Snake_Should_Eat_Food()
+        {
+            // arrange
+            Snake snake = new(Direction.Right, new Point(10, 10));
+            GameState initialGameState = new(snake, new Food(11, 10));
+
+            // act
+            GameState gameState = _engine.GetNextState(initialGameState);
+
+            // assert
+            Assert.That(gameState.Snake.Length, Is.EqualTo(2));
+            Point[] expectedSnake = new[] { new Point(11, 10), new Point(10, 10) };
+            CollectionAssert.AreEqual(expectedSnake, gameState.Snake.PiecePositions);
+        }
+
         #region Helpers
 
         public static Point[] GetPointArray(params (int, int)[] tuples)

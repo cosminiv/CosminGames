@@ -14,7 +14,7 @@
             if (initialGameState.IsFinal) 
                 throw new InvalidOperationException("Can't move from final state");
 
-            initialGameState.Snake.Move(out bool isSelfCollision);
+            initialGameState.Snake.Move(initialGameState.Food, out bool isSelfCollision);
             GameState nextGameState = new(initialGameState.Snake);
 
             if (IsSnakeOutOfField(nextGameState.Snake) || isSelfCollision)

@@ -24,5 +24,9 @@
         {
             return X.GetHashCode() ^ Y.GetHashCode();
         }
+
+        public static bool operator== (Point a, Point b) => a.Equals(b);
+
+        public static bool operator!= (Point a, Point b) => !a.Equals(b);
     }
 }
